@@ -32,28 +32,43 @@ export class Game {
   context: CanvasRenderingContext2D;
   engine: Engine<Components, Resources>;
   keyDown: boolean;
+  pressDown: boolean;
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
     this.context = canvas.getContext("2d")!;
     this.engine = new Engine<Components, Resources>();
     this.keyDown = false;
+    this.pressDown = false;
 
     this.setup();
+
+    const launch = () => {
+      this.engine.resources.set(Launch, {
+        angle: this.engine.resources.get(ThrowingAngle) || 0,
+        power: this.engine.resources.get(ThrowingPower) || 0,
+      });
+    };
 
     window.addEventListener("keydown", (e) => {
       this.keyDown = true;
 
       if (e.key === " ") {
-        this.engine.resources.set(Launch, {
-          angle: this.engine.resources.get(ThrowingAngle) || 0,
-          power: this.engine.resources.get(ThrowingPower) || 0,
-        });
+        launch();
       }
     });
 
     window.addEventListener("keyup", () => {
       this.keyDown = false;
+    });
+
+    window.addEventListener("pointerdown", () => {
+      this.pressDown = true;
+      launch();
+    });
+
+    window.addEventListener("pointerup", () => {
+      this.pressDown = false;
     });
   }
 
@@ -63,7 +78,7 @@ export class Game {
       [
         drawImagesSystem,
         (context) => {
-          if (this.keyDown) {
+          if (this.keyDown || this.pressDown) {
             context.changeState(Playing);
           }
         },
